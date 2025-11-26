@@ -80,216 +80,233 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Presence'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_outlined),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with Digital Clock
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.blue.shade600],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with Digital Clock
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      DateFormat('HH:mm:ss').format(_currentTime),
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade400, Colors.blue.shade600],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      DateFormat('EEEE, dd MMMM yyyy').format(_currentTime),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(255, 255, 255, 0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _getAttendanceNotification(),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        DateFormat('HH:mm:ss').format(_currentTime),
                         style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        DateFormat('EEEE, dd MMMM yyyy').format(_currentTime),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(255, 255, 255, 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _getAttendanceNotification(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Attendance Statistics Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Statistik Kehadiran',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+              // Attendance Statistics Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Statistik Kehadiran',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const Text(
-                      'Semester Ganjil 2024/2025',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 120,
-                                child: PieChart(
-                                  PieChartData(
-                                    sections: [
-                                      PieChartSectionData(
-                                        value: presentCount.toDouble(),
-                                        title:
-                                            '${attendancePercentage.toStringAsFixed(1)}%',
-                                        color: Colors.green,
-                                        radius: 40,
-                                        titleStyle: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                      const Text(
+                        'Semester Ganjil 2024/2025',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: 120,
+                                  child: PieChart(
+                                    PieChartData(
+                                      sections: [
+                                        PieChartSectionData(
+                                          value: presentCount.toDouble(),
+                                          title:
+                                              '${attendancePercentage.toStringAsFixed(1)}%',
+                                          color: Colors.green,
+                                          radius: 40,
+                                          titleStyle: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                      PieChartSectionData(
-                                        value: alphaCount.toDouble(),
-                                        title: '$alphaCount',
-                                        color: Colors.red,
-                                        radius: 30,
-                                      ),
-                                      PieChartSectionData(
-                                        value: izinCount.toDouble(),
-                                        title: '$izinCount',
-                                        color: Colors.orange,
-                                        radius: 30,
-                                      ),
-                                      PieChartSectionData(
-                                        value: sakitCount.toDouble(),
-                                        title: '$sakitCount',
-                                        color: Colors.yellow,
-                                        radius: 30,
-                                      ),
-                                    ],
-                                    sectionsSpace: 2,
-                                    centerSpaceRadius: 30,
+                                        PieChartSectionData(
+                                          value: alphaCount.toDouble(),
+                                          title: '$alphaCount',
+                                          color: Colors.red,
+                                          radius: 30,
+                                        ),
+                                        PieChartSectionData(
+                                          value: izinCount.toDouble(),
+                                          title: '$izinCount',
+                                          color: Colors.orange,
+                                          radius: 30,
+                                        ),
+                                        PieChartSectionData(
+                                          value: sakitCount.toDouble(),
+                                          title: '$sakitCount',
+                                          color: Colors.yellow,
+                                          radius: 30,
+                                        ),
+                                      ],
+                                      sectionsSpace: 2,
+                                      centerSpaceRadius: 30,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildStatItem(
-                                'Total Pertemuan',
-                                totalMeetings.toString(),
-                                Colors.blue,
-                              ),
-                              _buildStatItem(
-                                'Hadir',
-                                presentCount.toString(),
-                                Colors.green,
-                              ),
-                              _buildStatItem(
-                                'Alpha',
-                                alphaCount.toString(),
-                                Colors.red,
-                              ),
-                              _buildStatItem(
-                                'Izin',
-                                izinCount.toString(),
-                                Colors.orange,
-                              ),
-                              _buildStatItem(
-                                'Sakit',
-                                sakitCount.toString(),
-                                Colors.yellow,
-                              ),
-                            ],
+                          const SizedBox(width: 20),
+                          Expanded(
+                            flex: 3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildStatItem(
+                                  'Total Pertemuan',
+                                  totalMeetings.toString(),
+                                  Colors.blue,
+                                ),
+                                _buildStatItem(
+                                  'Hadir',
+                                  presentCount.toString(),
+                                  Colors.green,
+                                ),
+                                _buildStatItem(
+                                  'Alpha',
+                                  alphaCount.toString(),
+                                  Colors.red,
+                                ),
+                                _buildStatItem(
+                                  'Izin',
+                                  izinCount.toString(),
+                                  Colors.orange,
+                                ),
+                                _buildStatItem(
+                                  'Sakit',
+                                  sakitCount.toString(),
+                                  Colors.yellow,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Schedule Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Jadwal Pelajaran Hari Ini',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ..._schedule.map((subject) => _buildScheduleItem(subject)),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+
+              // Schedule Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Jadwal Pelajaran Hari Ini',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._schedule.map(
+                        (subject) => _buildScheduleItem(subject),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

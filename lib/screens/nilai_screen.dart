@@ -121,100 +121,304 @@ class _NilaiScreenState extends State<NilaiScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nilai'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: const Color(0xFF6366F1),
+        elevation: 0,
       ),
-      body: _isLoadingAssignments || _isLoadingSummary
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Rangkuman Nilai Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: _isLoadingAssignments || _isLoadingSummary
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      'Memuat data nilai...',
+                      style: TextStyle(color: Color(0xFF64748B), fontSize: 16),
+                    ),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    // Rangkuman Nilai Card
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color.fromRGBO(99, 102, 241, 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color.fromRGBO(255, 255, 255, 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.grade,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           const Text(
                             'Rangkuman Nilai',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Rata-rata Semester: ${_gradeSummary?['average'] ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Daftar Tugas
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _assignments.length,
-                    itemBuilder: (context, index) {
-                      final assignment = _assignments[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                    const SizedBox(height: 24),
+                    // Daftar Tugas
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _assignments.length,
+                      itemBuilder: (context, index) {
+                        final assignment = _assignments[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color.fromRGBO(0, 0, 0, 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                assignment['title'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: _getAssignmentStatusColor(
+                                        assignment['status'],
+                                      ).withAlpha(25),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      _getAssignmentStatusIcon(
+                                        assignment['status'],
+                                      ),
+                                      color: _getAssignmentStatusColor(
+                                        assignment['status'],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          assignment['title'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Mata Pelajaran: ${assignment['subject'] ?? ''}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Batas Waktu: ${assignment['deadline'] ?? ''}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                'Mata Pelajaran: ${assignment['subject'] ?? ''}',
-                              ),
-                              Text(
-                                'Batas Waktu: ${assignment['deadline'] ?? ''}',
-                              ),
-                              Text(
-                                'Status: ${assignment['status'] == 'belum_dikumpulkan' ? 'Belum Dikumpulkan' : 'Sudah Dinilai'}',
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getAssignmentStatusColor(
+                                    assignment['status'],
+                                  ).withAlpha(25),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  assignment['status'] == 'belum_dikumpulkan'
+                                      ? 'Belum Dikumpulkan'
+                                      : 'Sudah Dinilai',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _getAssignmentStatusColor(
+                                      assignment['status'],
+                                    ),
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 16),
                               if (assignment['status'] == 'belum_dikumpulkan')
-                                ElevatedButton(
-                                  onPressed: () =>
-                                      _submitAssignment(assignment['id']),
-                                  child: const Text('Kumpulkan Tugas'),
-                                )
-                              else if (assignment['status'] == 'sudah_dinilai')
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Nilai: ${assignment['grade'] ?? ''}',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _submitAssignment(assignment['id']),
+                                    icon: const Icon(Icons.upload_file),
+                                    label: const Text('Kumpulkan Tugas'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF6366F1),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    Text(
-                                      'Deskripsi: ${assignment['description'] ?? ''}',
+                                  ),
+                                )
+                              else if (assignment['status'] == 'sudah_dinilai')
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(
+                                      16,
+                                      185,
+                                      129,
+                                      0.05,
                                     ),
-                                  ],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: const Color.fromRGBO(
+                                        16,
+                                        185,
+                                        129,
+                                        0.2,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.star,
+                                            color: Color(0xFFF59E0B),
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Nilai: ${assignment['grade'] ?? ''}',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF10B981),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Deskripsi: ${assignment['description'] ?? ''}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
+  }
+
+  Color _getAssignmentStatusColor(String? status) {
+    switch (status) {
+      case 'belum_dikumpulkan':
+        return const Color(0xFFF59E0B);
+      case 'sudah_dinilai':
+        return const Color(0xFF10B981);
+      default:
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  IconData _getAssignmentStatusIcon(String? status) {
+    switch (status) {
+      case 'belum_dikumpulkan':
+        return Icons.assignment;
+      case 'sudah_dinilai':
+        return Icons.check_circle;
+      default:
+        return Icons.help;
+    }
   }
 }

@@ -5,11 +5,19 @@ class AuthService {
   static const String baseUrl =
       'https://api.smaunggul1.com'; // Replace with actual API URL
 
-  Future<Map<String, dynamic>> login(String nisnEmail, String password) async {
+  Future<Map<String, dynamic>> login(
+    String nisnEmail,
+    String password, {
+    String role = 'student',
+  }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'nisn_or_email': nisnEmail, 'password': password}),
+      body: jsonEncode({
+        'identifier': nisnEmail,
+        'password': password,
+        'role': role,
+      }),
     );
 
     if (response.statusCode == 200) {
