@@ -41,6 +41,9 @@ dependencies:
   # Camera for face recognition
   camera: ^0.10.5+9
 
+  # File picker for uploading assignments
+  file_picker: ^8.1.2
+
   # State management
   provider: ^6.1.2
 
