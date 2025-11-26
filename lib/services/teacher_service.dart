@@ -100,6 +100,63 @@ class TeacherService {
     }
   }
 
+  // Create new assignment
+  Future<Map<String, dynamic>> createAssignment(
+    String token,
+    String title,
+    String description,
+    String deadline,
+    int classId, {
+    dynamic materialFile,
+  }) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/teacher/assignments'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['title'] = title;
+    request.fields['description'] = description;
+    request.fields['deadline'] = deadline;
+    request.fields['class_id'] = classId.toString();
+
+    if (materialFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'material',
+          materialFile.path,
+          filename: materialFile.path.split('/').last,
+        ),
+      );
+    }
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to create assignment: ${response.body}');
+    }
+  }
+
+  // Get assignment details with submissions
+  Future<Map<String, dynamic>> getAssignmentDetails(
+    String token,
+    int assignmentId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/teacher/assignments/$assignmentId/details'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get assignment details: ${response.body}');
+    }
+  }
+
   // Get assignment submissions
   Future<List<dynamic>> getAssignmentSubmissions(
     String token,
