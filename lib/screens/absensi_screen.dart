@@ -33,10 +33,14 @@ class _AbsensiScreenState extends State<AbsensiScreen>
   bool _isLoadingHistory = true;
   String _filter = 'month'; // or 'subject'
 
+  // Stored token for async operations
+  String? _storedToken;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _storedToken = Provider.of<AuthProvider>(context, listen: false).token;
     _initializeCameras();
     _loadCurrentSubject();
     _loadHistory();
@@ -54,7 +58,7 @@ class _AbsensiScreenState extends State<AbsensiScreen>
     try {
       cameras = await availableCameras();
     } catch (e) {
-      print('Error initializing cameras: $e');
+      // Handle camera initialization error silently
     }
   }
 
@@ -65,17 +69,21 @@ class _AbsensiScreenState extends State<AbsensiScreen>
         final subject = await _absensiService.getCurrentSubject(
           authProvider.token!,
         );
-        setState(() {
-          _currentSubject = subject;
-          _isLoadingSubject = false;
-        });
+        if (mounted) {
+          setState(() {
+            _currentSubject = subject;
+            _isLoadingSubject = false;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _isLoadingSubject = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat mata pelajaran: $e')),
-        );
+        if (mounted) {
+          setState(() {
+            _isLoadingSubject = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal memuat mata pelajaran: $e')),
+          );
+        }
       }
     }
   }
@@ -88,26 +96,32 @@ class _AbsensiScreenState extends State<AbsensiScreen>
           authProvider.token!,
           filter: _filter,
         );
-        setState(() {
-          _history = history;
-          _isLoadingHistory = false;
-        });
+        if (mounted) {
+          setState(() {
+            _history = history;
+            _isLoadingHistory = false;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _isLoadingHistory = false;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat riwayat: $e')));
+        if (mounted) {
+          setState(() {
+            _isLoadingHistory = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal memuat riwayat: $e')));
+        }
       }
     }
   }
 
   Future<void> _startFaceRecognition() async {
     if (cameras == null || cameras!.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Kamera tidak tersedia')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Kamera tidak tersedia')));
+      }
       return;
     }
 
@@ -125,38 +139,44 @@ class _AbsensiScreenState extends State<AbsensiScreen>
 
     try {
       await _cameraController!.initialize();
-      setState(() {
-        _isRecognizing = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isRecognizing = true;
+        });
+      }
 
       // Start capturing every 2 seconds
       _captureTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
         await _captureAndRecognize();
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menginisialisasi kamera: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menginisialisasi kamera: $e')),
+        );
+      }
     }
   }
 
   Future<void> _captureAndRecognize() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized)
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return;
+    }
 
     try {
       final image = await _cameraController!.takePicture();
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.token != null) {
+      if (_storedToken != null) {
         final result = await _absensiService.recognizeFace(
-          authProvider.token!,
+          _storedToken!,
           File(image.path),
         );
         _stopRecognition();
-        _showResultDialog(result);
+        if (mounted) {
+          _showResultDialog(result);
+        }
       }
     } catch (e) {
-      print('Error during recognition: $e');
+      // Handle recognition error silently
     }
   }
 

@@ -21,8 +21,6 @@ class _MainNavigationState extends State<MainNavigation> {
     ProfilScreen(),
   ];
 
-  static const List<String> _titles = ['Home', 'Absensi', 'Nilai', 'Profil'];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;

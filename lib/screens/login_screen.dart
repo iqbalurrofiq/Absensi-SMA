@@ -34,9 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       // Navigation handled by AuthWrapper
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+      }
     }
 
     setState(() => _isLoading = false);
@@ -44,11 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _forgotPassword() {
     // Mock forgot password
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Forgot password functionality coming soon'),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Forgot password functionality coming soon'),
+        ),
+      );
+    }
   }
 
   @override

@@ -28,21 +28,21 @@ class _HomeScreenState extends State<HomeScreen> {
       'teacher': 'Bu Siti',
       'startTime': '07:00',
       'endTime': '08:30',
-      'status': 'current'
+      'status': 'current',
     },
     {
       'subject': 'Bahasa Indonesia',
       'teacher': 'Pak Ahmad',
       'startTime': '08:30',
       'endTime': '10:00',
-      'status': 'next'
+      'status': 'next',
     },
     {
       'subject': 'Fisika',
       'teacher': 'Bu Maya',
       'startTime': '10:00',
       'endTime': '11:30',
-      'status': 'upcoming'
+      'status': 'upcoming',
     },
   ];
 
@@ -125,9 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: const Color.fromRGBO(255, 255, 255, 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -166,10 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const Text(
                       'Semester Ganjil 2024/2025',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -185,7 +185,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     sections: [
                                       PieChartSectionData(
                                         value: presentCount.toDouble(),
-                                        title: '${attendancePercentage.toStringAsFixed(1)}%',
+                                        title:
+                                            '${attendancePercentage.toStringAsFixed(1)}%',
                                         color: Colors.green,
                                         radius: 40,
                                         titleStyle: const TextStyle(
@@ -227,11 +228,31 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildStatItem('Total Pertemuan', totalMeetings.toString(), Colors.blue),
-                              _buildStatItem('Hadir', presentCount.toString(), Colors.green),
-                              _buildStatItem('Alpha', alphaCount.toString(), Colors.red),
-                              _buildStatItem('Izin', izinCount.toString(), Colors.orange),
-                              _buildStatItem('Sakit', sakitCount.toString(), Colors.yellow),
+                              _buildStatItem(
+                                'Total Pertemuan',
+                                totalMeetings.toString(),
+                                Colors.blue,
+                              ),
+                              _buildStatItem(
+                                'Hadir',
+                                presentCount.toString(),
+                                Colors.green,
+                              ),
+                              _buildStatItem(
+                                'Alpha',
+                                alphaCount.toString(),
+                                Colors.red,
+                              ),
+                              _buildStatItem(
+                                'Izin',
+                                izinCount.toString(),
+                                Colors.orange,
+                              ),
+                              _buildStatItem(
+                                'Sakit',
+                                sakitCount.toString(),
+                                Colors.yellow,
+                              ),
                             ],
                           ),
                         ),
@@ -282,16 +303,10 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: 12,
             height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: const TextStyle(fontSize: 14),
-          ),
+          Text('$label: ', style: const TextStyle(fontSize: 14)),
           Text(
             value,
             style: TextStyle(
@@ -327,9 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withAlpha(25),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
+        border: Border.all(color: statusColor.withAlpha(76)),
       ),
       child: Row(
         children: [
@@ -346,10 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Text(
                   subject['teacher'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
             ),

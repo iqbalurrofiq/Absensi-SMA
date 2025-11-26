@@ -30,17 +30,21 @@ class _ProfilScreenState extends State<ProfilScreen> {
     if (authProvider.token != null) {
       try {
         final profile = await _profilService.getProfile(authProvider.token!);
-        setState(() {
-          _profile = profile;
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _profile = profile;
+            _isLoading = false;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat profil: $e')));
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal memuat profil: $e')));
+        }
       }
     }
   }
@@ -90,14 +94,18 @@ class _ProfilScreenState extends State<ProfilScreen> {
     if (authProvider.token != null) {
       try {
         await _profilService.updateProfilePhoto(authProvider.token!, imageFile);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto profil berhasil diperbarui')),
-        );
-        _loadProfile(); // Reload profile
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto profil berhasil diperbarui')),
+          );
+          _loadProfile(); // Reload profile
+        }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memperbarui foto: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Gagal memperbarui foto: $e')));
+        }
       }
     }
   }
@@ -125,13 +133,17 @@ class _ProfilScreenState extends State<ProfilScreen> {
         final shareData = await _profilService.shareProfile(
           authProvider.token!,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Kode profil: ${shareData['code']}')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Kode profil: ${shareData['code']}')),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal membagikan profil: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal membagikan profil: $e')),
+          );
+        }
       }
     }
   }
@@ -146,8 +158,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil'),

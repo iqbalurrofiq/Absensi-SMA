@@ -20,9 +20,13 @@ class _NilaiScreenState extends State<NilaiScreen> {
   bool _isLoadingAssignments = true;
   bool _isLoadingSummary = true;
 
+  // Stored token for async operations
+  String? _storedToken;
+
   @override
   void initState() {
     super.initState();
+    _storedToken = Provider.of<AuthProvider>(context, listen: false).token;
     _loadData();
   }
 
@@ -39,34 +43,42 @@ class _NilaiScreenState extends State<NilaiScreen> {
   Future<void> _loadAssignments(String token) async {
     try {
       final assignments = await _nilaiService.getAssignments(token);
-      setState(() {
-        _assignments = assignments;
-        _isLoadingAssignments = false;
-      });
+      if (mounted) {
+        setState(() {
+          _assignments = assignments;
+          _isLoadingAssignments = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingAssignments = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal memuat tugas: $e')));
+      if (mounted) {
+        setState(() {
+          _isLoadingAssignments = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal memuat tugas: $e')));
+      }
     }
   }
 
   Future<void> _loadGradeSummary(String token) async {
     try {
       final summary = await _nilaiService.getGradeSummary(token);
-      setState(() {
-        _gradeSummary = summary;
-        _isLoadingSummary = false;
-      });
+      if (mounted) {
+        setState(() {
+          _gradeSummary = summary;
+          _isLoadingSummary = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingSummary = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat rangkuman nilai: $e')),
-      );
+      if (mounted) {
+        setState(() {
+          _isLoadingSummary = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat rangkuman nilai: $e')),
+        );
+      }
     }
   }
 
@@ -78,24 +90,27 @@ class _NilaiScreenState extends State<NilaiScreen> {
 
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      if (authProvider.token != null) {
+      if (_storedToken != null) {
         try {
           await _nilaiService.submitAssignment(
-            authProvider.token!,
+            _storedToken!,
             assignmentId,
             file,
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tugas berhasil dikumpulkan!')),
-          );
-          // Reload assignments to update status
-          _loadAssignments(authProvider.token!);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tugas berhasil dikumpulkan!')),
+            );
+            // Reload assignments to update status
+            _loadAssignments(_storedToken!);
+          }
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengumpulkan tugas: $e')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Gagal mengumpulkan tugas: $e')),
+            );
+          }
         }
       }
     }
