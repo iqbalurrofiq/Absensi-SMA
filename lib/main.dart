@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_navigation.dart';
 
 void main() {
   runApp(
@@ -62,10 +63,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final authProvider = context.watch<AuthProvider>();
 
     if (authProvider.isAuthenticated) {
-      // TODO: Navigate to home screen
-      return const Scaffold(
-        body: Center(child: Text('Home Screen - Coming Soon')),
-      );
+      return const MainNavigation();
     } else {
       return const LoginScreen();
     }
