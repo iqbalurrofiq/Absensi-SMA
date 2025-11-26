@@ -38,6 +38,9 @@ dependencies:
   # HTTP client for API calls
   http: ^1.2.1
 
+  # Camera for face recognition
+  camera: ^0.10.5+9
+
   # State management
   provider: ^6.1.2
 
