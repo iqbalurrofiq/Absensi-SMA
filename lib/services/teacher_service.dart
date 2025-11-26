@@ -51,6 +51,41 @@ class TeacherService {
     }
   }
 
+  // Update student attendance status manually
+  Future<void> updateAttendanceStatus(
+    String token,
+    int attendanceId,
+    String status, {
+    String? notes,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/teacher/attendance/$attendanceId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'status': status, 'notes': notes}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update attendance: ${response.body}');
+    }
+  }
+
+  // Get students in a class
+  Future<List<dynamic>> getClassStudents(String token, int classId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/teacher/classes/$classId/students'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get class students: ${response.body}');
+    }
+  }
+
   // Get teacher's assignments
   Future<List<dynamic>> getTeacherAssignments(String token) async {
     final response = await http.get(
