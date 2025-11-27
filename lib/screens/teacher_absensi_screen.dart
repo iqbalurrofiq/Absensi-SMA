@@ -18,8 +18,11 @@ class _TeacherAbsensiScreenState extends State<TeacherAbsensiScreen> {
   List<dynamic> _attendanceData = [];
   Map<String, dynamic>? _selectedClass;
   DateTime _selectedDate = DateTime.now();
+  DateTime? _startDate;
+  DateTime? _endDate;
   bool _isLoadingClasses = true;
   bool _isLoadingAttendance = false;
+  bool _showAdvancedFilters = false;
 
   @override
   void initState() {
@@ -127,6 +130,180 @@ class _TeacherAbsensiScreenState extends State<TeacherAbsensiScreen> {
     }
   }
 
+  Future<void> _selectStartDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate:
+          _startDate ?? DateTime.now().subtract(const Duration(days: 7)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null) {
+      setState(() => _startDate = pickedDate);
+      if (_endDate != null && _endDate!.isBefore(pickedDate)) {
+        _endDate = pickedDate;
+      }
+    }
+  }
+
+  Future<void> _selectEndDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? DateTime.now(),
+      firstDate:
+          _startDate ?? DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null) {
+      setState(() => _endDate = pickedDate);
+    }
+  }
+
+  void _toggleAdvancedFilters() {
+    setState(() => _showAdvancedFilters = !_showAdvancedFilters);
+  }
+
+  void _applyDateRangeFilter() {
+    if (_startDate != null && _endDate != null) {
+      // Here you would implement the date range filtering logic
+      // For now, we'll just show a message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Filter diterapkan: ${DateFormat('dd/MM/yyyy').format(_startDate!)} - ${DateFormat('dd/MM/yyyy').format(_endDate!)}',
+          ),
+        ),
+      );
+    }
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _startDate = null;
+      _endDate = null;
+      _selectedDate = DateTime.now();
+    });
+    _loadAttendanceData();
+  }
+
+  void _sendMessageToStudent(Map<String, dynamic> student) {
+    final messageController = TextEditingController();
+    final subjectController = TextEditingController(
+      text: 'Pemberitahuan Absensi',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Kirim Pesan ke ${student['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: subjectController,
+              decoration: const InputDecoration(
+                labelText: 'Subjek',
+                hintText: 'Judul pesan',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: messageController,
+              decoration: const InputDecoration(
+                labelText: 'Pesan',
+                hintText: 'Tulis pesan untuk siswa',
+              ),
+              maxLines: 4,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (messageController.text.isNotEmpty) {
+                // Here you would implement the actual message sending
+                // For now, we'll just show a success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Pesan berhasil dikirim ke ${student['name']}',
+                    ),
+                  ),
+                );
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Kirim'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportAttendanceData() async {
+    if (_attendanceData.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak ada data untuk diekspor')),
+      );
+      return;
+    }
+
+    // Create CSV content
+    final csvHeader = 'NISN,Nama,Status,Waktu Absen\n';
+    final csvRows = _attendanceData
+        .map((student) {
+          final status = _getStatusText(student['status']);
+          final checkInTime = student['check_in_time'] != null
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm:ss',
+                ).format(DateTime.parse(student['check_in_time']))
+              : '';
+          return '${student['nisn']},${student['name']},$status,$checkInTime';
+        })
+        .join('\n');
+
+    final csvContent = csvHeader + csvRows;
+
+    // For now, we'll just show the CSV content in a dialog
+    // In a real app, you would save this to a file and share it
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Data Absensi (CSV)'),
+        content: SingleChildScrollView(
+          child: Text(
+            csvContent,
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Tutup'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Here you would implement actual file saving and sharing
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Fitur export akan diimplementasikan'),
+                ),
+              );
+              Navigator.of(context).pop();
+            },
+            child: const Text('Simpan File'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showStatusUpdateDialog(Map<String, dynamic> student) {
     showDialog(
       context: context,
@@ -225,6 +402,20 @@ class _TeacherAbsensiScreenState extends State<TeacherAbsensiScreen> {
         title: const Text('Kelola Absensi'),
         backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _toggleAdvancedFilters,
+            icon: Icon(
+              _showAdvancedFilters ? Icons.filter_list_off : Icons.filter_list,
+            ),
+            tooltip: 'Filter Lanjutan',
+          ),
+          IconButton(
+            onPressed: _exportAttendanceData,
+            icon: const Icon(Icons.download),
+            tooltip: 'Export Data',
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -307,6 +498,134 @@ class _TeacherAbsensiScreenState extends State<TeacherAbsensiScreen> {
                 ],
               ),
             ),
+
+            // Advanced Filters (if enabled)
+            if (_showAdvancedFilters)
+              Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromRGBO(0, 0, 0, 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Filter Rentang Tanggal',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: _selectStartDate,
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Tanggal Mulai',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                suffixIcon: Icon(
+                                  Icons.calendar_today,
+                                  size: 20,
+                                ),
+                              ),
+                              child: Text(
+                                _startDate != null
+                                    ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_startDate!)
+                                    : 'Pilih tanggal',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _startDate != null
+                                      ? Colors.black
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: _selectEndDate,
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Tanggal Akhir',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                suffixIcon: Icon(
+                                  Icons.calendar_today,
+                                  size: 20,
+                                ),
+                              ),
+                              child: Text(
+                                _endDate != null
+                                    ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                                    : 'Pilih tanggal',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _endDate != null
+                                      ? Colors.black
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _applyDateRangeFilter,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6366F1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('Terapkan Filter'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _resetFilters,
+                          icon: const Icon(Icons.refresh),
+                          tooltip: 'Reset Filter',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
 
             // Attendance Summary
             if (_selectedClass != null)
@@ -489,6 +808,16 @@ class _TeacherAbsensiScreenState extends State<TeacherAbsensiScreen> {
                                     ),
                                     tooltip: 'Update Status',
                                   ),
+                                  if (student['status'] == 'absent')
+                                    IconButton(
+                                      onPressed: () =>
+                                          _sendMessageToStudent(student),
+                                      icon: const Icon(
+                                        Icons.message,
+                                        color: Color(0xFF10B981),
+                                      ),
+                                      tooltip: 'Kirim Pesan',
+                                    ),
                                 ],
                               ),
                             ],

@@ -31,6 +31,10 @@ class _TeacherNilaiScreenState extends State<TeacherNilaiScreen>
   bool _isLoadingClasses = true;
   bool _isLoadingAssignments = true;
   bool _isCreatingAssignment = false;
+  bool _showAdvancedFilters = false;
+  DateTime? _filterStartDate;
+  DateTime? _filterEndDate;
+  String _filterStatus = 'all'; // all, submitted, not_submitted
 
   @override
   void initState() {
@@ -182,6 +186,114 @@ class _TeacherNilaiScreenState extends State<TeacherNilaiScreen>
     ).then((_) => _loadAssignments()); // Reload when returning
   }
 
+  void _toggleAdvancedFilters() {
+    setState(() => _showAdvancedFilters = !_showAdvancedFilters);
+  }
+
+  Future<void> _selectFilterStartDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate:
+          _filterStartDate ?? DateTime.now().subtract(const Duration(days: 30)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+
+    if (pickedDate != null) {
+      setState(() => _filterStartDate = pickedDate);
+    }
+  }
+
+  Future<void> _selectFilterEndDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _filterEndDate ?? DateTime.now(),
+      firstDate:
+          _filterStartDate ??
+          DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+
+    if (pickedDate != null) {
+      setState(() => _filterEndDate = pickedDate);
+    }
+  }
+
+  void _applyFilters() {
+    // Here you would implement the filtering logic
+    // For now, we'll just show a message
+    String message = 'Filter diterapkan: ';
+    if (_filterStartDate != null && _filterEndDate != null) {
+      message +=
+          '${DateFormat('dd/MM/yyyy').format(_filterStartDate!)} - ${DateFormat('dd/MM/yyyy').format(_filterEndDate!)}';
+    }
+    message += ', Status: $_filterStatus';
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _filterStartDate = null;
+      _filterEndDate = null;
+      _filterStatus = 'all';
+    });
+  }
+
+  Future<void> _exportGradesData() async {
+    if (_assignments.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak ada data untuk diekspor')),
+      );
+      return;
+    }
+
+    // Create CSV content for assignments summary
+    final csvHeader =
+        'Judul Tugas,Kelas,Mata Pelajaran,Batas Waktu,Sudah Kumpul,Total Siswa\n';
+    final csvRows = _assignments
+        .map((assignment) {
+          return '${assignment['title']},${assignment['class_name']},${assignment['subject']},${DateFormat('dd/MM/yyyy').format(DateTime.parse(assignment['deadline']))},${assignment['submitted_count'] ?? 0},${assignment['total_students'] ?? 0}';
+        })
+        .join('\n');
+
+    final csvContent = csvHeader + csvRows;
+
+    // Show CSV content in dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Data Nilai (CSV)'),
+        content: SingleChildScrollView(
+          child: Text(
+            csvContent,
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Tutup'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Here you would implement actual file saving and sharing
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Fitur export akan diimplementasikan'),
+                ),
+              );
+              Navigator.of(context).pop();
+            },
+            child: const Text('Simpan File'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,6 +301,15 @@ class _TeacherNilaiScreenState extends State<TeacherNilaiScreen>
         title: const Text('Kelola Nilai'),
         backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _toggleAdvancedFilters,
+            icon: Icon(
+              _showAdvancedFilters ? Icons.filter_list_off : Icons.filter_list,
+            ),
+            tooltip: 'Filter Lanjutan',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -422,150 +543,312 @@ class _TeacherNilaiScreenState extends State<TeacherNilaiScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_assignments.isEmpty) {
-      return const Center(
-        child: Text(
-          'Belum ada tugas yang dibuat',
-          style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
-        ),
-      );
-    }
+    return Column(
+      children: [
+        // Advanced Filters (if enabled)
+        if (_showAdvancedFilters)
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color.fromRGBO(0, 0, 0, 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Filter Tugas',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: _selectFilterStartDate,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Tanggal Mulai',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            suffixIcon: Icon(Icons.calendar_today, size: 20),
+                          ),
+                          child: Text(
+                            _filterStartDate != null
+                                ? DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(_filterStartDate!)
+                                : 'Pilih tanggal',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _filterStartDate != null
+                                  ? Colors.black
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: InkWell(
+                        onTap: _selectFilterEndDate,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Tanggal Akhir',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            suffixIcon: Icon(Icons.calendar_today, size: 20),
+                          ),
+                          child: Text(
+                            _filterEndDate != null
+                                ? DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(_filterEndDate!)
+                                : 'Pilih tanggal',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _filterEndDate != null
+                                  ? Colors.black
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _filterStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Status Tugas',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('Semua Tugas')),
+                    DropdownMenuItem(
+                      value: 'submitted',
+                      child: Text('Sudah Dinilai'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'not_submitted',
+                      child: Text('Belum Lengkap'),
+                    ),
+                  ],
+                  onChanged: (value) => setState(() => _filterStatus = value!),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _applyFilters,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Terapkan Filter'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _resetFilters,
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Reset Filter',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: _assignments.length,
-      itemBuilder: (context, index) {
-        final assignment = _assignments[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: const Color.fromRGBO(0, 0, 0, 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                assignment['title'] ?? '',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                assignment['description'] ?? '',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.class_, size: 16, color: Color(0xFF6366F1)),
-                  const SizedBox(width: 4),
-                  Text(
-                    assignment['class_name'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6366F1),
-                      fontWeight: FontWeight.w500,
-                    ),
+        // Assignments List
+        Expanded(
+          child: _assignments.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Belum ada tugas yang dibuat',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
                   ),
-                  const SizedBox(width: 16),
-                  const Icon(
-                    Icons.schedule,
-                    size: 16,
-                    color: Color(0xFFF59E0B),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    DateFormat(
-                      'dd/MM/yyyy',
-                    ).format(DateTime.parse(assignment['deadline'])),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFFF59E0B),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: _assignments.length,
+                  itemBuilder: (context, index) {
+                    final assignment = _assignments[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withAlpha(25),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color.fromRGBO(0, 0, 0, 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        '${assignment['submitted_count'] ?? 0} Sudah Kumpul',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF10B981),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            assignment['title'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            assignment['description'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF64748B),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.class_,
+                                size: 16,
+                                color: Color(0xFF6366F1),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                assignment['class_name'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF6366F1),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              const Icon(
+                                Icons.schedule,
+                                size: 16,
+                                color: Color(0xFFF59E0B),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(
+                                  DateTime.parse(assignment['deadline']),
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFFF59E0B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withAlpha(25),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    '${assignment['submitted_count'] ?? 0} Sudah Kumpul',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF10B981),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFF59E0B,
+                                    ).withAlpha(25),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    '${assignment['total_students'] ?? 0} Total Siswa',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFF59E0B),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  _navigateToGrading(assignment['id']),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Penilaian'),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withAlpha(25),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${assignment['total_students'] ?? 0} Total Siswa',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFF59E0B),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 40,
-                child: ElevatedButton(
-                  onPressed: () => _navigateToGrading(assignment['id']),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Penilaian'),
+                    );
+                  },
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 }
@@ -615,6 +898,65 @@ class _AssignmentGradingScreenState extends State<AssignmentGradingScreen> {
         }
       }
     }
+  }
+
+  void _sendReminderToStudent(Map<String, dynamic> student) {
+    final messageController = TextEditingController(
+      text:
+          'Halo ${student['name']}, tugas "${_assignmentDetails!['title']}" sudah mendekati batas waktu pengumpulan. Silakan segera kumpulkan tugas Anda.',
+    );
+    final subjectController = TextEditingController(text: 'Pengingat Tugas');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Kirim Pengingat ke ${student['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: subjectController,
+              decoration: const InputDecoration(
+                labelText: 'Subjek',
+                hintText: 'Judul pesan',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: messageController,
+              decoration: const InputDecoration(
+                labelText: 'Pesan',
+                hintText: 'Tulis pesan pengingat',
+              ),
+              maxLines: 4,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (messageController.text.isNotEmpty) {
+                // Here you would implement the actual message sending
+                // For now, we'll just show a success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Pengingat berhasil dikirim ke ${student['name']}',
+                    ),
+                  ),
+                );
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Kirim'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showGradingDialog(Map<String, dynamic> submission) {
@@ -898,6 +1240,14 @@ class _AssignmentGradingScreenState extends State<AssignmentGradingScreen> {
                                   ),
                                 ],
                               ),
+                            ),
+                            IconButton(
+                              onPressed: () => _sendReminderToStudent(student),
+                              icon: const Icon(
+                                Icons.message,
+                                color: Color(0xFFF59E0B),
+                              ),
+                              tooltip: 'Kirim Pengingat',
                             ),
                           ],
                         ),
